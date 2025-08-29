@@ -1,0 +1,21 @@
+# Ignore virtual environments
+.venv
+venv
+env
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore git
+.git
+.gitignore
+
+# Ignore local files
+*.log
+*.tmp
+
+# Ignore data you don’t need in the container
+data/
+notebooks/
