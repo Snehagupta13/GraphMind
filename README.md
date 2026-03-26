@@ -67,3 +67,9 @@ python main.py
 Sneha Gupta
 AI Developer @ Meril
 GitHub: @Snehagupta13
+
+
+
+
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/09b5d727-9ef5-48d4-8b11-dbe76e58a3aa" />
+
