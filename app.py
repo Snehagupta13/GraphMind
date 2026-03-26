@@ -1,52 +1,60 @@
 import streamlit as st
 from graph import build_graph
 
-# Build your graph once
+# Build graph once
 graph = build_graph()
 
-# Initialize session state memory
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+st.set_page_config(page_title="GraphMind AI", layout="wide")
 
-st.title("RAG Chat with Streaming + Memory")
+st.title("🧠 GraphMind AI Assistant")
 
-# User input
-user_input = st.chat_input("Ask me something about Meril Life Science...")
+# Chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Input box
+user_input = st.chat_input("Ask anything...")
 
 if user_input:
-    # Append user message to memory
-    st.session_state.chat_history.append(("user", user_input))
+    st.session_state.messages.append(("user", user_input))
 
-    # Build the input payload (include memory)
-    inputs = {"messages": st.session_state.chat_history}
+    # Display user message
+    with st.chat_message("user"):
+        st.write(user_input)
 
-    # Stream the response
-    response_container = st.empty()
-    full_response = ""
+    # Run graph
+    inputs = {"messages": [("user", user_input)]}
 
-    for step in graph.stream(inputs, stream_mode="values"):
-        message = step["messages"][-1]
-        if isinstance(message, tuple):
-            role, content = message
-            if role == "assistant":
-                full_response += content
-                response_container.markdown(full_response)
-        else:
-            # LangChain/LangGraph messages often have pretty_print()
-            try:
-                content = message.pretty_repr() if hasattr(message, "pretty_repr") else str(message)
-                full_response += content
-                response_container.markdown(full_response)
-            except:
-                pass
+    with st.chat_message("assistant"):
+        response_placeholder = st.empty()
+        tool_placeholder = st.empty()
 
-    # Append assistant response to memory
-    st.session_state.chat_history.append(("assistant", full_response))
+        final_response = ""
 
-# Display conversation history
-st.subheader("Conversation history")
-for role, msg in st.session_state.chat_history:
-    if role == "user":
-        st.markdown(f"**🧑 You:** {msg}")
-    else:
-        st.markdown(f"**🤖 Assistant:** {msg}")
+        for step in graph.stream(inputs, stream_mode="values"):
+            message = step["messages"][-1]
+
+            # ✅ Detect Tool Usage
+            if hasattr(message, "tool_calls") and message.tool_calls:
+                tool_name = message.tool_calls[0]["name"]
+                tool_placeholder.info(f"🔧 Using Tool: {tool_name}")
+
+            # ✅ Tool response
+            elif message.type == "tool":
+                tool_placeholder.success(f"✅ Tool finished: {message.name}")
+
+            # ✅ Final AI response
+            elif message.type == "ai":
+                final_response = message.content
+                response_placeholder.markdown(final_response)
+
+    st.session_state.messages.append(("assistant", final_response))
+
+
+# Show history nicely
+st.divider()
+st.subheader("💬 Chat History")
+
+for role, msg in st.session_state.messages:
+    with st.chat_message(role):
+        st.write(msg)
