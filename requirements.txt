@@ -21,3 +21,7 @@ python-docx
 requests
 numpy
 pydantic
+tavily
+arxiv
+langchain_mcp_adapters
+IPython
